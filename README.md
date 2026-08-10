@@ -32,50 +32,66 @@ uv venv
 ```
 
 ```bash
-uv add pyspark
+uv add pyspark jupyterlab
 ```
 
 Verify it:
 
 ```bash
-pyspark --version
+uv run pyspark --version
 ```
 
 ---
 
-## 2. Start the Interactive Spark Shell
+## 2. Start JupyterLab
 
-Run:
+Launch JupyterLab from the project directory:
 
 ```bash
-pyspark
+uv run jupyter lab
 ```
 
-This starts a local Spark instance and drops you into a Python REPL.
+Your browser should open automatically. In JupyterLab, create a notebook by selecting
+**Python 3 (ipykernel)** under **Notebook**.
 
-Spark automatically gives you a `SparkSession` named:
+Unlike the `pyspark` terminal shell, a regular Jupyter notebook does not create a
+Spark session automatically. Put this in the first cell and run it:
 
 ```python
-spark
+from pyspark.sql import SparkSession
+
+spark = (
+    SparkSession.builder
+    .appName("SparkLabNotebook")
+    .master("local[*]")
+    .getOrCreate()
+)
 ```
 
-Try:
-
-```python
-spark
-```
-
-Then:
+Check that Spark is ready in another cell:
 
 ```python
 spark.version
 ```
 
+Keep this notebook open for the exercises below. Each Python block can be pasted
+into its own cell and run with **Shift+Enter**. Variables such as `spark` and `df`
+remain available between cells.
+
+When you are finished, stop Spark in a final cell:
+
+```python
+spark.stop()
+```
+
+Then use **File > Shut Down** in JupyterLab and press **Ctrl+C** in the terminal
+that launched it.
+
 ---
 
 # 3. Create Your First DataFrame
 
-Inside the `pyspark` shell:
+Inside your Jupyter notebook:
 
 ```python
 data = [
@@ -288,12 +304,6 @@ Spark's distinction between **transformations** and **actions** is worth experim
 
 # 8. Create Some Actual Data
 
-Exit the PySpark shell:
-
-```python
-exit()
-```
-
 Create a CSV:
 
 ```bash
@@ -308,12 +318,6 @@ Frank,29,Boston
 Grace,38,New York
 Henry,22,Chicago
 EOF
-```
-
-Start PySpark again:
-
-```bash
-pyspark
 ```
 
 Read the file:
@@ -422,7 +426,7 @@ spark.stop()
 Run it using:
 
 ```bash
-spark-submit job.py
+uv run spark-submit job.py
 ```
 
 ---
@@ -510,22 +514,22 @@ result.explain("formatted")
 
 # 12. Useful Commands
 
-Start interactive PySpark:
+Start JupyterLab:
 
 ```bash
-pyspark
+uv run jupyter lab
 ```
 
 Run a Spark program:
 
 ```bash
-spark-submit job.py
+uv run spark-submit job.py
 ```
 
 Check Spark version:
 
 ```bash
-pyspark --version
+uv run pyspark --version
 ```
 
 Activate your Python environment:
@@ -534,10 +538,10 @@ Activate your Python environment:
 source .venv/bin/activate
 ```
 
-Stop the interactive shell:
+Stop Spark in the notebook:
 
 ```python
-exit()
+spark.stop()
 ```
 
 ---
