@@ -63,6 +63,49 @@ Java:   11
 Docker/Colima
 ```
 
+## Spark Connect
+
+The Compose stack also runs a Spark Connect server backed by this lab's YARN
+cluster. Build the image and start the stack with:
+
+```bash
+docker build -t spark-yarn-lab .
+docker compose up -d
+docker compose logs -f connect
+```
+
+The server is ready when the `connect` service is healthy. It is exposed to the
+host at `sc://localhost:15002`; its Spark UI is at
+<http://localhost:4040>. The first startup downloads the version-matched Spark
+Connect package, and the `spark-ivy-cache` volume preserves that download across
+container recreation.
+
+Install a matching client on the host:
+
+```bash
+python3 -m pip install 'pyspark[connect]==3.5.8'
+```
+
+Then verify the connection:
+
+```bash
+python3 - <<'PY'
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.remote("sc://localhost:15002").getOrCreate()
+spark.range(10).show()
+spark.stop()
+PY
+```
+
+To start or inspect only the Connect service after the cluster is running:
+
+```bash
+docker compose up -d connect
+docker compose ps connect
+docker compose logs -f connect
+```
+
 Even though your Mac already has Java, most of this lab runs inside containers, so Java will also exist inside the cluster image.
 
 ---

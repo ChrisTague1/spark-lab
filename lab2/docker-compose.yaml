@@ -12,6 +12,13 @@ services:
       # YARN ResourceManager UI
       - "8088:8088"
 
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/master/8032'"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
     volumes:
       - ./config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
       - ./config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
@@ -103,8 +110,58 @@ services:
         tail -f /dev/null
       "
 
+  connect:
+    image: spark-yarn-lab
+    hostname: connect
+    container_name: spark-yarn-connect
+
+    ports:
+      # Spark Connect gRPC endpoint
+      - "15002:15002"
+
+      # Spark UI for the Connect server application
+      - "4040:4040"
+
+    volumes:
+      - ./config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ./config/yarn-site.xml:/opt/hadoop/etc/hadoop/yarn-site.xml
+      - ./config/mapred-site.xml:/opt/hadoop/etc/hadoop/mapred-site.xml
+      - ./config/capacity-scheduler.xml:/opt/hadoop/etc/hadoop/capacity-scheduler.xml
+      - ./jobs:/workspace/jobs
+      - spark-ivy-cache:/root/.ivy2
+
+    depends_on:
+      master:
+        condition: service_healthy
+      worker1:
+        condition: service_started
+      worker2:
+        condition: service_started
+      worker3:
+        condition: service_started
+
+    command:
+      - bash
+      - -ec
+      - |
+        /opt/spark/sbin/start-connect-server.sh \
+          --master yarn \
+          --deploy-mode client \
+          --packages "$${SPARK_CONNECT_PACKAGE}" \
+          --conf spark.connect.grpc.binding.port=15002
+        exec tail -F /opt/spark/logs/*SparkConnectServer*.out
+
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/127.0.0.1/15002'"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+
 volumes:
   namenode-data:
   worker1-data:
   worker2-data:
   worker3-data:
+  spark-ivy-cache:

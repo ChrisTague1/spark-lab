@@ -2,6 +2,7 @@ FROM eclipse-temurin:11-jdk
 
 ARG HADOOP_VERSION=3.3.6
 ARG SPARK_VERSION=3.5.8
+ARG SCALA_BINARY_VERSION=2.12
 
 RUN apt-get update && \
     apt-get install -y \
@@ -41,10 +42,16 @@ ENV JAVA_HOME=/opt/java/openjdk
 ENV HADOOP_HOME=/opt/hadoop
 ENV SPARK_HOME=/opt/spark
 
+# Keep the optional Spark Connect server artifact aligned with this image's
+# Spark and Scala versions. docker-compose uses this coordinate at startup.
+ENV SPARK_CONNECT_PACKAGE=org.apache.spark:spark-connect_${SCALA_BINARY_VERSION}:${SPARK_VERSION}
+
 ENV HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
 ENV YARN_CONF_DIR=/opt/hadoop/etc/hadoop
 
 ENV PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$SPARK_HOME/bin
+
+EXPOSE 15002
 
 WORKDIR /workspace
 

@@ -1,0 +1,21 @@
+[project]
+name = "spark-lab"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "ChrisTague1", email = "cstague6401@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28.1",
+    "pyspark[connect]==3.5.8",
+    "setuptools>=80.9.0",
+]
+
+[project.scripts]
+spark-lab = "spark_lab:main"
+
+[build-system]
+requires = ["uv_build>=0.12.3,<0.13.0"]
+build-backend = "uv_build"
